@@ -77,7 +77,30 @@ export default function MovieCard({ movie }: MovieCardProps) {
 
         <div className="text-sm text-gray-600 dark:text-gray-300 mt-auto">
           <p className="line-clamp-2 text-sm text-gray-500 dark:text-gray-400">
-            导演: {movie.director}
+            {movie.director === "导演信息需要在详情页查看" ? (
+              <Link
+                href={`/movie/${movie.id}`}
+                className="text-blue-500 hover:underline inline-flex items-center"
+              >
+                查看导演信息
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-3.5 w-3.5 ml-1"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </Link>
+            ) : (
+              <>导演: {movie.director}</>
+            )}
           </p>
         </div>
       </div>

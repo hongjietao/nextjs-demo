@@ -80,17 +80,31 @@ export function adaptMovie(tmdbMovie: TMDBMovie): Movie {
  * 将多个TMDB电影数据转换为Movie数组
  */
 export function adaptMovieList(tmdbMovies: TMDBMovie[]): Movie[] {
-  return tmdbMovies.map((movie) => ({
-    id: movie.id,
-    title: movie.title,
-    originalTitle: movie.original_title,
-    year: movie.release_date ? new Date(movie.release_date).getFullYear() : 0,
-    rating: parseFloat(movie.vote_average.toFixed(1)),
-    director: "导演信息需要在详情页查看",
-    actors: [],
-    genres: [],
-    summary: movie.overview || "",
-    posterUrl: getImageUrl(movie.poster_path),
-    duration: "未知",
-  }));
+  return tmdbMovies.map((movie) => {
+    // 尝试从crew中获取导演（如果有）
+    const director =
+      movie.credits?.crew?.find((person) => person.job === "Director")?.name ||
+      "导演信息需要在详情页查看";
+
+    // 尝试获取演员（如果有）
+    const actors =
+      movie.credits?.cast?.slice(0, 3).map((actor) => actor.name) || [];
+
+    // 尝试获取电影类型
+    const genres = movie.genres?.map((genre) => genre.name) || [];
+
+    return {
+      id: movie.id,
+      title: movie.title,
+      originalTitle: movie.original_title,
+      year: movie.release_date ? new Date(movie.release_date).getFullYear() : 0,
+      rating: parseFloat(movie.vote_average.toFixed(1)),
+      director,
+      actors,
+      genres,
+      summary: movie.overview || "",
+      posterUrl: getImageUrl(movie.poster_path),
+      duration: movie.runtime ? `${movie.runtime}分钟` : "未知",
+    };
+  });
 }

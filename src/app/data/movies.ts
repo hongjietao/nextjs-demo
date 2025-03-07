@@ -98,8 +98,12 @@ export async function getAllMovies(): Promise<Movie[]> {
 
 // 根据ID获取电影详情
 export async function getMovieById(id: number): Promise<Movie | undefined> {
-  // 检查缓存
-  if (movieCache.has(id) && !isCacheExpired()) {
+  // 检查缓存 - 仅当缓存中的电影有完整导演信息时才使用
+  if (
+    movieCache.has(id) &&
+    !isCacheExpired() &&
+    movieCache.get(id)!.director !== "导演信息需要在详情页查看"
+  ) {
     return movieCache.get(id);
   }
 
