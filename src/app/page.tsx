@@ -1,7 +1,10 @@
-import { getAllMovies, getTopRatedMovies } from "./data/movies";
+"use client";
+
+import { useState, useEffect } from "react";
+import { Movie } from "./data/movies";
 import MovieCard from "./components/MovieCard";
-import { Suspense } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
+import InfiniteScroll from "./components/InfiniteScroll";
 
 // 创建一个加载中的MovieCard占位符
 function MovieCardSkeleton() {
@@ -21,53 +24,109 @@ function MovieCardSkeleton() {
   );
 }
 
-// 异步热门电影列表组件
-async function PopularMovieList() {
-  const movies = await getAllMovies();
-
-  if (movies.length === 0) {
-    return (
-      <div className="text-center py-10">
-        <p className="text-xl text-gray-600 dark:text-gray-400">
-          无法加载电影数据，请稍后再试
-        </p>
-      </div>
-    );
-  }
-
+// 电影列表骨架屏
+function MovieListSkeleton() {
   return (
     <>
-      {movies.map((movie) => (
-        <MovieCard key={movie.id} movie={movie} />
-      ))}
-    </>
-  );
-}
-
-// 异步最佳评分电影列表组件
-async function TopRatedMovieList() {
-  const movies = await getTopRatedMovies();
-
-  if (movies.length === 0) {
-    return (
-      <div className="text-center py-10">
-        <p className="text-xl text-gray-600 dark:text-gray-400">
-          无法加载电影数据，请稍后再试
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <>
-      {movies.map((movie) => (
-        <MovieCard key={movie.id} movie={movie} />
-      ))}
+      {Array(8)
+        .fill(0)
+        .map((_, index) => (
+          <MovieCardSkeleton key={index} />
+        ))}
     </>
   );
 }
 
 export default function Home() {
+  // 热门电影状态
+  const [popularMovies, setPopularMovies] = useState<Movie[]>([]);
+  const [popularPage, setPopularPage] = useState(1);
+  const [popularTotalPages, setPopularTotalPages] = useState(1);
+  const [isLoadingPopular, setIsLoadingPopular] = useState(false);
+
+  // 最佳评分电影状态
+  const [topRatedMovies, setTopRatedMovies] = useState<Movie[]>([]);
+  const [topRatedPage, setTopRatedPage] = useState(1);
+  const [topRatedTotalPages, setTopRatedTotalPages] = useState(1);
+  const [isLoadingTopRated, setIsLoadingTopRated] = useState(false);
+
+  // 初始加载热门电影
+  useEffect(() => {
+    fetchPopularMovies(1);
+  }, []);
+
+  // 初始化最佳评分电影（当用户切换到该标签时）
+  const initializeTopRatedMovies = () => {
+    if (topRatedMovies.length === 0) {
+      fetchTopRatedMovies(1);
+    }
+  };
+
+  // 获取热门电影
+  const fetchPopularMovies = async (page: number) => {
+    try {
+      setIsLoadingPopular(true);
+      const response = await fetch(`/api/movies/popular?page=${page}`);
+      const data = await response.json();
+
+      if (page === 1) {
+        setPopularMovies(data.movies);
+      } else {
+        setPopularMovies((prev) => [...prev, ...data.movies]);
+      }
+
+      setPopularPage(data.page);
+      setPopularTotalPages(data.totalPages);
+      setIsLoadingPopular(false);
+    } catch (error) {
+      console.error("获取热门电影失败:", error);
+      setIsLoadingPopular(false);
+    }
+  };
+
+  // 获取最佳评分电影
+  const fetchTopRatedMovies = async (page: number) => {
+    try {
+      setIsLoadingTopRated(true);
+      const response = await fetch(`/api/movies/top-rated?page=${page}`);
+      const data = await response.json();
+
+      if (page === 1) {
+        setTopRatedMovies(data.movies);
+      } else {
+        setTopRatedMovies((prev) => [...prev, ...data.movies]);
+      }
+
+      setTopRatedPage(data.page);
+      setTopRatedTotalPages(data.totalPages);
+      setIsLoadingTopRated(false);
+    } catch (error) {
+      console.error("获取最佳评分电影失败:", error);
+      setIsLoadingTopRated(false);
+    }
+  };
+
+  // 加载更多热门电影
+  const loadMorePopularMovies = () => {
+    if (popularPage < popularTotalPages && !isLoadingPopular) {
+      fetchPopularMovies(popularPage + 1);
+    }
+  };
+
+  // 加载更多最佳评分电影
+  const loadMoreTopRatedMovies = () => {
+    if (topRatedPage < topRatedTotalPages && !isLoadingTopRated) {
+      fetchTopRatedMovies(topRatedPage + 1);
+    }
+  };
+
+  // 标签切换处理函数
+  const handleTabChange = (value: string) => {
+    if (value === "top-rated") {
+      initializeTopRatedMovies();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <header className="bg-white dark:bg-gray-800 shadow-md py-6">
@@ -104,7 +163,11 @@ export default function Home() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="popular" className="mb-8">
+        <Tabs
+          defaultValue="popular"
+          className="mb-8"
+          onValueChange={handleTabChange}
+        >
           <div className="flex items-center justify-between mb-6">
             <TabsList className="bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
               <TabsTrigger
@@ -123,39 +186,51 @@ export default function Home() {
           </div>
 
           <TabsContent value="popular">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-              <Suspense
-                fallback={
-                  <>
-                    {Array(10)
-                      .fill(0)
-                      .map((_, index) => (
-                        <MovieCardSkeleton key={index} />
-                      ))}
-                  </>
-                }
-              >
-                <PopularMovieList />
-              </Suspense>
-            </div>
+            <InfiniteScroll
+              onLoadMore={loadMorePopularMovies}
+              hasMore={popularPage < popularTotalPages}
+              isLoading={isLoadingPopular}
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {popularMovies.length > 0 ? (
+                  popularMovies.map((movie) => (
+                    <MovieCard key={movie.id} movie={movie} />
+                  ))
+                ) : isLoadingPopular ? (
+                  <MovieListSkeleton />
+                ) : (
+                  <div className="col-span-full text-center py-10">
+                    <p className="text-xl text-gray-600 dark:text-gray-400">
+                      无法加载电影数据，请稍后再试
+                    </p>
+                  </div>
+                )}
+              </div>
+            </InfiniteScroll>
           </TabsContent>
 
           <TabsContent value="top-rated">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-              <Suspense
-                fallback={
-                  <>
-                    {Array(10)
-                      .fill(0)
-                      .map((_, index) => (
-                        <MovieCardSkeleton key={index} />
-                      ))}
-                  </>
-                }
-              >
-                <TopRatedMovieList />
-              </Suspense>
-            </div>
+            <InfiniteScroll
+              onLoadMore={loadMoreTopRatedMovies}
+              hasMore={topRatedPage < topRatedTotalPages}
+              isLoading={isLoadingTopRated}
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {topRatedMovies.length > 0 ? (
+                  topRatedMovies.map((movie) => (
+                    <MovieCard key={movie.id} movie={movie} />
+                  ))
+                ) : isLoadingTopRated ? (
+                  <MovieListSkeleton />
+                ) : (
+                  <div className="col-span-full text-center py-10">
+                    <p className="text-xl text-gray-600 dark:text-gray-400">
+                      无法加载电影数据，请稍后再试
+                    </p>
+                  </div>
+                )}
+              </div>
+            </InfiniteScroll>
           </TabsContent>
         </Tabs>
       </main>

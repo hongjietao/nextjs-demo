@@ -57,12 +57,22 @@ export async function fetchPopularMovies(page = 1, language = "zh-CN") {
 
     // 如果成功获取数据，记录日志
     console.log(`成功获取热门电影，共 ${data.results.length} 条记录`);
-    return data.results;
+    return {
+      results: data.results,
+      page: data.page || 1,
+      total_pages: data.total_pages || 1,
+      total_results: data.total_results || 0,
+    };
   } catch (error) {
     console.error("获取热门电影失败:", error);
     console.log("API返回空数据，使用后备数据");
     // 返回空数组，会触发使用后备数据
-    return [];
+    return {
+      results: [],
+      page: 1,
+      total_pages: 1,
+      total_results: 0,
+    };
   }
 }
 
@@ -212,11 +222,21 @@ export async function fetchTopRatedMovies(page = 1, language = "zh-CN") {
 
     // 如果成功获取数据，记录日志
     console.log(`成功获取最佳评分电影，共 ${data.results.length} 条记录`);
-    return data.results;
+    return {
+      results: data.results,
+      page: data.page || 1,
+      total_pages: data.total_pages || 1,
+      total_results: data.total_results || 0,
+    };
   } catch (error) {
     console.error("获取最佳评分电影失败:", error);
     console.log("API返回空数据，使用后备数据");
     // 返回空数组，会触发使用后备数据
-    return [];
+    return {
+      results: [],
+      page: 1,
+      total_pages: 1,
+      total_results: 0,
+    };
   }
 }

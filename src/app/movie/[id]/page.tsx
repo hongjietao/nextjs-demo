@@ -11,6 +11,7 @@ import {
 import { Suspense } from "react";
 import ActorCard from "../../components/ActorCard";
 import ImageGallery from "../../components/ImageGallery";
+import { Tabs } from "../../components/ui/tabs";
 
 interface MovieDetailPageProps {
   params: {

@@ -58,6 +58,11 @@ let hasNetworkError = false;
 // 强制使用后备数据的开关，设为false以允许从TMDB获取实时数据
 const USE_FALLBACK_DATA = false;
 
+// 热门电影总页数和每页数量记录
+let popularMoviesTotalPages = 1;
+let topRatedMoviesTotalPages = 1;
+const ITEMS_PER_PAGE = 20; // 修改为每页20条数据
+
 // 缓存是否过期
 function isCacheExpired(): boolean {
   return Date.now() - cacheTimestamp > CACHE_DURATION;
@@ -70,10 +75,18 @@ export async function getMovies(start = 0, limit = 10): Promise<Movie[]> {
 }
 
 // 获取所有电影 (TMDB热门电影)
-export async function getAllMovies(): Promise<Movie[]> {
-  // 如果缓存有效，直接返回缓存
-  if (allMoviesCache && !isCacheExpired()) {
-    return allMoviesCache;
+export async function getAllMovies(page = 1): Promise<{
+  movies: Movie[];
+  page: number;
+  totalPages: number;
+}> {
+  // 如果缓存有效，且请求第一页数据，直接返回缓存
+  if (allMoviesCache && !isCacheExpired() && page === 1) {
+    return {
+      movies: allMoviesCache,
+      page: 1,
+      totalPages: popularMoviesTotalPages,
+    };
   }
 
   // 如果强制使用后备数据，则直接返回
@@ -81,47 +94,71 @@ export async function getAllMovies(): Promise<Movie[]> {
     console.log("配置设置为使用后备数据");
     allMoviesCache = FALLBACK_MOVIES;
     cacheTimestamp = Date.now();
-    return FALLBACK_MOVIES;
+    return {
+      movies: FALLBACK_MOVIES,
+      page: 1,
+      totalPages: 1,
+    };
   }
 
   try {
-    // 获取TMDB热门电影
-    const tmdbMovies = await fetchPopularMovies(1);
+    // 获取TMDB热门电影，指定页码
+    const tmdbMoviesResult = await fetchPopularMovies(page);
+    const tmdbMovies = tmdbMoviesResult.results || [];
+    popularMoviesTotalPages = tmdbMoviesResult.total_pages || 1;
 
     // 如果API返回空数组，使用后备数据
     if (!tmdbMovies || tmdbMovies.length === 0) {
       console.log("API返回空数据，使用后备数据");
 
       // 更新缓存时间戳，但保留短缓存时间以便稍后重试
-      allMoviesCache = FALLBACK_MOVIES;
-      cacheTimestamp = Date.now();
+      if (page === 1) {
+        allMoviesCache = FALLBACK_MOVIES;
+        cacheTimestamp = Date.now();
+      }
 
-      return FALLBACK_MOVIES;
+      return {
+        movies: FALLBACK_MOVIES,
+        page: 1,
+        totalPages: 1,
+      };
     }
 
     // 转换为应用的Movie格式
     const movies = adaptMovieList(tmdbMovies);
 
-    // 更新缓存
-    allMoviesCache = movies;
-    cacheTimestamp = Date.now();
-    hasNetworkError = false;
+    // 如果是第一页，更新缓存
+    if (page === 1) {
+      allMoviesCache = movies;
+      cacheTimestamp = Date.now();
+      hasNetworkError = false;
 
-    // 同时更新单个电影的缓存
-    movies.forEach((movie) => {
-      movieCache.set(movie.id, movie);
-    });
+      // 同时更新单个电影的缓存
+      movies.forEach((movie) => {
+        movieCache.set(movie.id, movie);
+      });
+    }
 
-    return movies;
+    return {
+      movies: movies,
+      page: page,
+      totalPages: popularMoviesTotalPages,
+    };
   } catch (error) {
     console.error("获取电影列表失败，使用后备数据:", error);
     hasNetworkError = true;
 
     // 更新缓存但使用短缓存时间
-    allMoviesCache = FALLBACK_MOVIES;
-    cacheTimestamp = Date.now() - (CACHE_DURATION - 60000); // 只缓存1分钟
+    if (page === 1) {
+      allMoviesCache = FALLBACK_MOVIES;
+      cacheTimestamp = Date.now() - (CACHE_DURATION - 60000); // 只缓存1分钟
+    }
 
-    return FALLBACK_MOVIES;
+    return {
+      movies: FALLBACK_MOVIES,
+      page: 1,
+      totalPages: 1,
+    };
   }
 }
 
@@ -167,14 +204,19 @@ export async function getMovieById(id: number): Promise<Movie | undefined> {
   }
 }
 
-// 获取最佳评分电影
-export async function getTopRatedMovies(
-  start = 0,
-  limit = 10
-): Promise<Movie[]> {
-  // 如果缓存有效，直接返回缓存
-  if (topRatedMoviesCache && !isCacheExpired()) {
-    return topRatedMoviesCache.slice(start, start + limit);
+// 获取最佳评分电影 - 支持分页和更多加载
+export async function getTopRatedMovies(page = 1): Promise<{
+  movies: Movie[];
+  page: number;
+  totalPages: number;
+}> {
+  // 如果缓存有效，且请求第一页，直接返回缓存
+  if (topRatedMoviesCache && !isCacheExpired() && page === 1) {
+    return {
+      movies: topRatedMoviesCache,
+      page: 1,
+      totalPages: topRatedMoviesTotalPages,
+    };
   }
 
   // 如果强制使用后备数据，则直接返回
@@ -182,42 +224,66 @@ export async function getTopRatedMovies(
     console.log("配置设置为使用后备数据");
     topRatedMoviesCache = FALLBACK_MOVIES;
     cacheTimestamp = Date.now();
-    return FALLBACK_MOVIES.slice(start, start + limit);
+    return {
+      movies: FALLBACK_MOVIES,
+      page: 1,
+      totalPages: 1,
+    };
   }
 
   try {
-    // 获取TMDB最佳评分电影
-    const tmdbMovies = await fetchTopRatedMovies(1);
+    // 获取TMDB最佳评分电影，指定页码
+    const tmdbMoviesResult = await fetchTopRatedMovies(page);
+    const tmdbMovies = tmdbMoviesResult.results || [];
+    topRatedMoviesTotalPages = tmdbMoviesResult.total_pages || 1;
 
     // 如果API返回空数组，使用后备数据
     if (!tmdbMovies || tmdbMovies.length === 0) {
       console.log("API返回空数据，使用后备数据");
 
       // 更新缓存时间戳，但保留短缓存时间以便稍后重试
-      topRatedMoviesCache = FALLBACK_MOVIES;
-      cacheTimestamp = Date.now();
+      if (page === 1) {
+        topRatedMoviesCache = FALLBACK_MOVIES;
+        cacheTimestamp = Date.now();
+      }
 
-      return FALLBACK_MOVIES.slice(start, start + limit);
+      return {
+        movies: FALLBACK_MOVIES,
+        page: 1,
+        totalPages: 1,
+      };
     }
 
     // 转换为应用的Movie格式
     const movies = adaptMovieList(tmdbMovies);
 
-    // 更新缓存
-    topRatedMoviesCache = movies;
-    cacheTimestamp = Date.now();
-    hasNetworkError = false;
+    // 如果是第一页，更新缓存
+    if (page === 1) {
+      topRatedMoviesCache = movies;
+      cacheTimestamp = Date.now();
+      hasNetworkError = false;
+    }
 
-    return movies.slice(start, start + limit);
+    return {
+      movies: movies,
+      page: page,
+      totalPages: topRatedMoviesTotalPages,
+    };
   } catch (error) {
     console.error("获取最佳评分电影列表失败，使用后备数据:", error);
     hasNetworkError = true;
 
     // 更新缓存但使用短缓存时间
-    topRatedMoviesCache = FALLBACK_MOVIES;
-    cacheTimestamp = Date.now() - (CACHE_DURATION - 60000); // 只缓存1分钟
+    if (page === 1) {
+      topRatedMoviesCache = FALLBACK_MOVIES;
+      cacheTimestamp = Date.now() - (CACHE_DURATION - 60000); // 只缓存1分钟
+    }
 
-    return FALLBACK_MOVIES.slice(start, start + limit);
+    return {
+      movies: FALLBACK_MOVIES,
+      page: 1,
+      totalPages: 1,
+    };
   }
 }
 
