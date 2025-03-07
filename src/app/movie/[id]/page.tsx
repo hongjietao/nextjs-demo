@@ -129,12 +129,21 @@ async function MovieDetail({ movieId }: { movieId: number }) {
         <div className="absolute inset-0 opacity-30">
           {/* 背景海报 */}
           <img
-            src={movie.posterUrl}
+            src={movie.backdropUrl || movie.posterUrl}
             alt={movie.title}
             className="absolute inset-0 w-full h-full object-cover object-center"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent"></div>
         </div>
+
+        {/* 标语展示 */}
+        {movie.tagline && (
+          <div className="absolute inset-x-0 bottom-10 text-center">
+            <p className="text-white text-xl italic font-light px-4 py-2 inline-block bg-black/40 rounded-lg">
+              &ldquo;{movie.tagline}&rdquo;
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-40 relative z-10">
@@ -164,6 +173,60 @@ async function MovieDetail({ movieId }: { movieId: number }) {
                     <span>想看</span>
                   </button>
                 </div>
+
+                {/* 新增电影基本信息卡片 */}
+                <div className="mt-6 bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-3 border-b border-gray-200 dark:border-gray-600 pb-2">
+                    影片信息
+                  </h3>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex">
+                      <span className="text-gray-500 dark:text-gray-400 min-w-[80px]">
+                        上映状态:
+                      </span>
+                      <span className="text-gray-700 dark:text-gray-200">
+                        {movie.status || "未知"}
+                      </span>
+                    </li>
+                    {movie.productionCountries &&
+                      movie.productionCountries.length > 0 && (
+                        <li className="flex">
+                          <span className="text-gray-500 dark:text-gray-400 min-w-[80px]">
+                            制作国家:
+                          </span>
+                          <span className="text-gray-700 dark:text-gray-200">
+                            {movie.productionCountries.join("、")}
+                          </span>
+                        </li>
+                      )}
+                    <li className="flex">
+                      <span className="text-gray-500 dark:text-gray-400 min-w-[80px]">
+                        预算:
+                      </span>
+                      <span className="text-gray-700 dark:text-gray-200">
+                        {movie.budget}
+                      </span>
+                    </li>
+                    <li className="flex">
+                      <span className="text-gray-500 dark:text-gray-400 min-w-[80px]">
+                        票房:
+                      </span>
+                      <span className="text-gray-700 dark:text-gray-200">
+                        {movie.revenue}
+                      </span>
+                    </li>
+                    {movie.languages && movie.languages.length > 0 && (
+                      <li className="flex">
+                        <span className="text-gray-500 dark:text-gray-400 min-w-[80px]">
+                          语言:
+                        </span>
+                        <span className="text-gray-700 dark:text-gray-200">
+                          {movie.languages.join("、")}
+                        </span>
+                      </li>
+                    )}
+                  </ul>
+                </div>
               </div>
             </div>
 
@@ -184,15 +247,25 @@ async function MovieDetail({ movieId }: { movieId: number }) {
                 {movie.originalTitle} ({movie.year})
               </p>
 
-              <div className="flex items-center mb-6">
-                <div className="flex items-center bg-yellow-400 text-white rounded-lg px-3 py-1 mr-3">
+              <div className="flex items-center mb-6 flex-wrap gap-3">
+                <div className="flex items-center bg-yellow-400 text-white rounded-lg px-3 py-1">
                   <StarIcon className="h-5 w-5 mr-1" />
                   <span className="font-bold">{movie.rating}</span>
+                  {movie.voteCount && (
+                    <span className="text-xs ml-1">
+                      ({movie.voteCount}人评分)
+                    </span>
+                  )}
                 </div>
-                <div className="flex items-center text-gray-600 dark:text-gray-300 mr-4">
+                <div className="flex items-center text-gray-600 dark:text-gray-300">
                   <ClockIcon className="h-5 w-5 mr-1" />
                   <span>{movie.duration}</span>
                 </div>
+                {movie.popularity && (
+                  <div className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-md">
+                    热度: {movie.popularity.toFixed(1)}
+                  </div>
+                )}
               </div>
 
               <div className="mb-6">
@@ -208,11 +281,42 @@ async function MovieDetail({ movieId }: { movieId: number }) {
                 </div>
               </div>
 
+              {/* 电影制作公司信息 */}
+              {movie.productionCompanies &&
+                movie.productionCompanies.length > 0 && (
+                  <div className="mb-4 text-sm">
+                    <span className="text-gray-500 dark:text-gray-400">
+                      制作公司:{" "}
+                    </span>
+                    <span className="text-gray-700 dark:text-gray-200">
+                      {movie.productionCompanies.join("、")}
+                    </span>
+                  </div>
+                )}
+
               <div className="mb-6">
                 <div className="flex items-start text-gray-600 dark:text-gray-300 mb-2">
                   <span className="font-medium min-w-[70px]">导演：</span>
                   <span>{movie.director}</span>
                 </div>
+
+                {/* 新增编剧信息 */}
+                {movie.writers && movie.writers.length > 0 && (
+                  <div className="flex items-start text-gray-600 dark:text-gray-300 mb-2">
+                    <span className="font-medium min-w-[70px]">编剧：</span>
+                    <span>{movie.writers.join("、")}</span>
+                  </div>
+                )}
+
+                {/* 新增摄影师信息 */}
+                {movie.cinematographers &&
+                  movie.cinematographers.length > 0 && (
+                    <div className="flex items-start text-gray-600 dark:text-gray-300 mb-2">
+                      <span className="font-medium min-w-[70px]">摄影：</span>
+                      <span>{movie.cinematographers.join("、")}</span>
+                    </div>
+                  )}
+
                 <div className="flex items-start text-gray-600 dark:text-gray-300">
                   <span className="font-medium min-w-[70px]">演员：</span>
                   <span>{movie.actors.join("、")}</span>

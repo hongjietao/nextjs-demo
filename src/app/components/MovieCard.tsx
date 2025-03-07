@@ -22,6 +22,11 @@ export default function MovieCard({ movie }: MovieCardProps) {
           <div className="flex items-center space-x-2">
             <StarIcon className="h-5 w-5 text-yellow-400" />
             <span className="font-bold">{movie.rating}</span>
+            {movie.voteCount && (
+              <span className="text-xs opacity-75">
+                ({Math.round(movie.voteCount / 100) / 10}k)
+              </span>
+            )}
           </div>
         </div>
 
@@ -49,6 +54,12 @@ export default function MovieCard({ movie }: MovieCardProps) {
             </svg>
           </div>
         </div>
+
+        {movie.popularity && movie.popularity > 500 && (
+          <div className="absolute top-3 right-3 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+            热门
+          </div>
+        )}
       </Link>
 
       <div className="p-4 flex-grow flex flex-col">
@@ -74,6 +85,12 @@ export default function MovieCard({ movie }: MovieCardProps) {
             ))}
           </div>
         </div>
+
+        {movie.tagline && (
+          <p className="text-xs italic text-gray-500 dark:text-gray-400 my-2 line-clamp-1">
+            &ldquo;{movie.tagline}&rdquo;
+          </p>
+        )}
 
         <div className="text-sm text-gray-600 dark:text-gray-300 mt-auto">
           <p className="line-clamp-2 text-sm text-gray-500 dark:text-gray-400">
@@ -102,6 +119,12 @@ export default function MovieCard({ movie }: MovieCardProps) {
               <>导演: {movie.director}</>
             )}
           </p>
+
+          {movie.actors && movie.actors.length > 0 && (
+            <p className="line-clamp-1 text-xs text-gray-500 dark:text-gray-400 mt-1">
+              演员: {movie.actors.join("、")}
+            </p>
+          )}
         </div>
       </div>
     </div>

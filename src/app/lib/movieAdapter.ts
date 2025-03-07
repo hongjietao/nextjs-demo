@@ -30,6 +30,15 @@ export interface TMDBMovie {
   recommendations?: {
     results: TMDBMovie[];
   };
+  vote_count: number;
+  popularity: number;
+  status: string;
+  production_companies?: Array<{ name: string }>;
+  production_countries?: Array<{ name: string }>;
+  spoken_languages?: Array<{ name: string }>;
+  tagline?: string;
+  budget: number;
+  revenue: number;
 }
 
 /**
@@ -61,6 +70,50 @@ export function adaptMovie(tmdbMovie: TMDBMovie): Movie {
   // 格式化片长
   const duration = tmdbMovie.runtime ? `${tmdbMovie.runtime}分钟` : "未知";
 
+  // 新增信息处理
+  // 获取编剧
+  const writers =
+    tmdbMovie.credits?.crew
+      ?.filter(
+        (person) =>
+          person.job === "Screenplay" ||
+          person.job === "Writer" ||
+          person.job === "Story"
+      )
+      .map((person) => person.name) || [];
+
+  // 获取摄影师
+  const cinematographers =
+    tmdbMovie.credits?.crew
+      ?.filter(
+        (person) =>
+          person.job === "Director of Photography" ||
+          person.job === "Cinematography"
+      )
+      .map((person) => person.name) || [];
+
+  // 格式化预算和票房 (转换为亿/万)
+  const formatMoney = (amount: number): string => {
+    if (!amount) return "未知";
+    if (amount >= 100000000) {
+      return `${(amount / 100000000).toFixed(2)}亿`;
+    } else if (amount >= 10000) {
+      return `${(amount / 10000).toFixed(2)}万`;
+    }
+    return `${amount}`;
+  };
+
+  // 处理制作公司
+  const productionCompanies =
+    tmdbMovie.production_companies?.map((company) => company.name) || [];
+
+  // 处理制作国家
+  const productionCountries =
+    tmdbMovie.production_countries?.map((country) => country.name) || [];
+
+  // 处理语言
+  const languages = tmdbMovie.spoken_languages?.map((lang) => lang.name) || [];
+
   return {
     id: tmdbMovie.id,
     title: tmdbMovie.title,
@@ -73,6 +126,19 @@ export function adaptMovie(tmdbMovie: TMDBMovie): Movie {
     summary: tmdbMovie.overview || "",
     posterUrl: getImageUrl(tmdbMovie.poster_path),
     duration,
+    // 新增字段
+    backdropUrl: getImageUrl(tmdbMovie.backdrop_path, "original"),
+    voteCount: tmdbMovie.vote_count,
+    popularity: tmdbMovie.popularity,
+    status: tmdbMovie.status,
+    productionCompanies,
+    productionCountries,
+    tagline: tmdbMovie.tagline || "",
+    budget: formatMoney(tmdbMovie.budget),
+    revenue: formatMoney(tmdbMovie.revenue),
+    languages,
+    writers,
+    cinematographers,
   };
 }
 
@@ -105,6 +171,11 @@ export function adaptMovieList(tmdbMovies: TMDBMovie[]): Movie[] {
       summary: movie.overview || "",
       posterUrl: getImageUrl(movie.poster_path),
       duration: movie.runtime ? `${movie.runtime}分钟` : "未知",
+      // 添加部分可用于列表展示的新字段
+      backdropUrl: getImageUrl(movie.backdrop_path),
+      voteCount: movie.vote_count,
+      popularity: movie.popularity,
+      tagline: movie.tagline || "",
     };
   });
 }

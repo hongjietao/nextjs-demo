@@ -82,7 +82,10 @@ export async function fetchMovieById(id: number, language = "zh-CN") {
         : "http://localhost:3000"
     );
     url.searchParams.append("endpoint", `movie/${id}`);
-    url.searchParams.append("append_to_response", "credits,recommendations");
+    url.searchParams.append(
+      "append_to_response",
+      "credits,recommendations,videos,images"
+    );
     url.searchParams.append("language", language);
 
     console.log(`请求电影详情URL: ${url.toString()}`);

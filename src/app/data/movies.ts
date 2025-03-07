@@ -10,6 +10,18 @@ export interface Movie {
   summary: string;
   posterUrl: string;
   duration: string;
+  backdropUrl?: string; // 背景大图
+  voteCount?: number; // 评分人数
+  popularity?: number; // 热度指数
+  status?: string; // 上映状态
+  productionCompanies?: string[]; // 制作公司
+  productionCountries?: string[]; // 制作国家
+  tagline?: string; // 标语/口号
+  budget?: string; // 预算
+  revenue?: string; // 票房
+  languages?: string[]; // 语言
+  writers?: string[]; // 编剧
+  cinematographers?: string[]; // 摄影师
 }
 
 // 导入TMDB API相关函数
