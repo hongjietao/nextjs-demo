@@ -51,6 +51,11 @@ export async function getAllMovies(): Promise<Movie[]> {
     // 如果API返回空数组，使用后备数据
     if (!tmdbMovies || tmdbMovies.length === 0) {
       console.log("API返回空数据，使用后备数据");
+
+      // 更新缓存时间戳，但保留短缓存时间以便稍后重试
+      allMoviesCache = FALLBACK_MOVIES;
+      cacheTimestamp = Date.now();
+
       return FALLBACK_MOVIES;
     }
 
@@ -71,6 +76,11 @@ export async function getAllMovies(): Promise<Movie[]> {
   } catch (error) {
     console.error("获取电影列表失败，使用后备数据:", error);
     hasNetworkError = true;
+
+    // 更新缓存但使用短缓存时间
+    allMoviesCache = FALLBACK_MOVIES;
+    cacheTimestamp = Date.now() - (CACHE_DURATION - 60000); // 只缓存1分钟
+
     return FALLBACK_MOVIES;
   }
 }
