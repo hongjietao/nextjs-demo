@@ -22,16 +22,33 @@ export interface Movie {
   languages?: string[]; // 语言
   writers?: string[]; // 编剧
   cinematographers?: string[]; // 摄影师
+  // 新增剧照数据
+  images?: {
+    backdrops: string[]; // 剧照图片URL数组
+    posters: string[]; // 海报图片URL数组
+  };
+  // 扩展演员详细信息
+  castDetails?: Array<{
+    id: number;
+    name: string;
+    character: string;
+    profileUrl: string;
+  }>;
 }
 
 // 导入TMDB API相关函数
-import { fetchPopularMovies, fetchMovieById } from "../lib/tmdb";
+import {
+  fetchPopularMovies,
+  fetchMovieById,
+  fetchTopRatedMovies,
+} from "../lib/tmdb";
 import { adaptMovie, adaptMovieList } from "../lib/movieAdapter";
 import { FALLBACK_MOVIES } from "../lib/fallback-movies";
 
 // 电影缓存
 const movieCache: Map<number, Movie> = new Map();
 let allMoviesCache: Movie[] | null = null;
+let topRatedMoviesCache: Movie[] | null = null;
 let cacheTimestamp: number = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 缓存5分钟
 
@@ -147,6 +164,60 @@ export async function getMovieById(id: number): Promise<Movie | undefined> {
 
     // 尝试从后备数据查找
     return FALLBACK_MOVIES.find((movie) => movie.id === id);
+  }
+}
+
+// 获取最佳评分电影
+export async function getTopRatedMovies(
+  start = 0,
+  limit = 10
+): Promise<Movie[]> {
+  // 如果缓存有效，直接返回缓存
+  if (topRatedMoviesCache && !isCacheExpired()) {
+    return topRatedMoviesCache.slice(start, start + limit);
+  }
+
+  // 如果强制使用后备数据，则直接返回
+  if (USE_FALLBACK_DATA) {
+    console.log("配置设置为使用后备数据");
+    topRatedMoviesCache = FALLBACK_MOVIES;
+    cacheTimestamp = Date.now();
+    return FALLBACK_MOVIES.slice(start, start + limit);
+  }
+
+  try {
+    // 获取TMDB最佳评分电影
+    const tmdbMovies = await fetchTopRatedMovies(1);
+
+    // 如果API返回空数组，使用后备数据
+    if (!tmdbMovies || tmdbMovies.length === 0) {
+      console.log("API返回空数据，使用后备数据");
+
+      // 更新缓存时间戳，但保留短缓存时间以便稍后重试
+      topRatedMoviesCache = FALLBACK_MOVIES;
+      cacheTimestamp = Date.now();
+
+      return FALLBACK_MOVIES.slice(start, start + limit);
+    }
+
+    // 转换为应用的Movie格式
+    const movies = adaptMovieList(tmdbMovies);
+
+    // 更新缓存
+    topRatedMoviesCache = movies;
+    cacheTimestamp = Date.now();
+    hasNetworkError = false;
+
+    return movies.slice(start, start + limit);
+  } catch (error) {
+    console.error("获取最佳评分电影列表失败，使用后备数据:", error);
+    hasNetworkError = true;
+
+    // 更新缓存但使用短缓存时间
+    topRatedMoviesCache = FALLBACK_MOVIES;
+    cacheTimestamp = Date.now() - (CACHE_DURATION - 60000); // 只缓存1分钟
+
+    return FALLBACK_MOVIES.slice(start, start + limit);
   }
 }
 

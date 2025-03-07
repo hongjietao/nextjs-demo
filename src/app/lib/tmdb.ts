@@ -172,3 +172,51 @@ export async function searchMovies(
     return [];
   }
 }
+
+/**
+ * 获取最佳评分电影（类似豆瓣Top）
+ */
+export async function fetchTopRatedMovies(page = 1, language = "zh-CN") {
+  try {
+    // 获取API URL
+    const baseApiUrl = getApiUrl();
+
+    // 构建完整的API URL，带查询参数
+    const url = new URL(
+      baseApiUrl,
+      typeof window !== "undefined"
+        ? window.location.origin
+        : "http://localhost:3000"
+    );
+    url.searchParams.append("endpoint", "movie/top_rated");
+    url.searchParams.append("page", page.toString());
+    url.searchParams.append("language", language);
+
+    console.log(`请求最佳评分电影URL: ${url.toString()}`);
+
+    // 使用完整URL发起请求
+    const response = await fetch(url.toString(), {
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      console.error(`API响应错误: ${response.status}`);
+      throw new Error(`API响应错误: ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (!data || !data.results || !Array.isArray(data.results)) {
+      console.error("API返回的数据格式不正确");
+      throw new Error("API返回的数据格式不正确");
+    }
+
+    // 如果成功获取数据，记录日志
+    console.log(`成功获取最佳评分电影，共 ${data.results.length} 条记录`);
+    return data.results;
+  } catch (error) {
+    console.error("获取最佳评分电影失败:", error);
+    console.log("API返回空数据，使用后备数据");
+    // 返回空数组，会触发使用后备数据
+    return [];
+  }
+}

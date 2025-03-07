@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { Movie } from "../data/movies";
 import { StarIcon } from "@heroicons/react/24/solid";
+import ClientImage from "./ClientImage";
 
 interface MovieCardProps {
   movie: Movie;
@@ -13,7 +16,7 @@ export default function MovieCard({ movie }: MovieCardProps) {
         href={`/movie/${movie.id}`}
         className="relative h-[400px] overflow-hidden block"
       >
-        <img
+        <ClientImage
           src={movie.posterUrl}
           alt={movie.title}
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 hover:scale-105"

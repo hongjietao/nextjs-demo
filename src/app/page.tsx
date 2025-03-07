@@ -1,6 +1,7 @@
-import { getAllMovies } from "./data/movies";
+import { getAllMovies, getTopRatedMovies } from "./data/movies";
 import MovieCard from "./components/MovieCard";
 import { Suspense } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 
 // 创建一个加载中的MovieCard占位符
 function MovieCardSkeleton() {
@@ -20,9 +21,32 @@ function MovieCardSkeleton() {
   );
 }
 
-// 异步电影列表组件
-async function MovieList() {
+// 异步热门电影列表组件
+async function PopularMovieList() {
   const movies = await getAllMovies();
+
+  if (movies.length === 0) {
+    return (
+      <div className="text-center py-10">
+        <p className="text-xl text-gray-600 dark:text-gray-400">
+          无法加载电影数据，请稍后再试
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {movies.map((movie) => (
+        <MovieCard key={movie.id} movie={movie} />
+      ))}
+    </>
+  );
+}
+
+// 异步最佳评分电影列表组件
+async function TopRatedMovieList() {
+  const movies = await getTopRatedMovies();
 
   if (movies.length === 0) {
     return (
@@ -50,7 +74,7 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-4 md:mb-0">
-              热门电影 <span className="text-blue-500">Top 20</span>
+              电影<span className="text-blue-500">精选</span>
             </h1>
             <div className="flex items-center space-x-4">
               <div className="relative">
@@ -80,26 +104,60 @@ export default function Home() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
-            热门电影
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            <Suspense
-              fallback={
-                <>
-                  {Array(10)
-                    .fill(0)
-                    .map((_, index) => (
-                      <MovieCardSkeleton key={index} />
-                    ))}
-                </>
-              }
-            >
-              <MovieList />
-            </Suspense>
+        <Tabs defaultValue="popular" className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <TabsList className="bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
+              <TabsTrigger
+                value="popular"
+                className="px-4 py-2 rounded-md data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-sm"
+              >
+                热门电影
+              </TabsTrigger>
+              <TabsTrigger
+                value="top-rated"
+                className="px-4 py-2 rounded-md data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-sm"
+              >
+                最佳评分
+              </TabsTrigger>
+            </TabsList>
           </div>
-        </div>
+
+          <TabsContent value="popular">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+              <Suspense
+                fallback={
+                  <>
+                    {Array(10)
+                      .fill(0)
+                      .map((_, index) => (
+                        <MovieCardSkeleton key={index} />
+                      ))}
+                  </>
+                }
+              >
+                <PopularMovieList />
+              </Suspense>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="top-rated">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+              <Suspense
+                fallback={
+                  <>
+                    {Array(10)
+                      .fill(0)
+                      .map((_, index) => (
+                        <MovieCardSkeleton key={index} />
+                      ))}
+                  </>
+                }
+              >
+                <TopRatedMovieList />
+              </Suspense>
+            </div>
+          </TabsContent>
+        </Tabs>
       </main>
 
       <footer className="bg-white dark:bg-gray-800 shadow-inner py-8">

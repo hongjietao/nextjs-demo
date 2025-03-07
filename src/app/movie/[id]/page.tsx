@@ -9,6 +9,8 @@ import {
   BookmarkIcon,
 } from "@heroicons/react/24/outline";
 import { Suspense } from "react";
+import ActorCard from "../../components/ActorCard";
+import ImageGallery from "../../components/ImageGallery";
 
 interface MovieDetailPageProps {
   params: {
@@ -334,6 +336,30 @@ async function MovieDetail({ movieId }: { movieId: number }) {
             </div>
           </div>
         </div>
+
+        {/* 演员阵容部分 */}
+        {movie.castDetails && movie.castDetails.length > 0 && (
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 mb-10">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6">
+              主要演员
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
+              {movie.castDetails.map((actor) => (
+                <ActorCard key={actor.id} actor={actor} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 剧照墙部分 */}
+        {movie.images && movie.images.backdrops.length > 0 && (
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 mb-10">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6">
+              精彩剧照
+            </h2>
+            <ImageGallery images={movie.images.backdrops} />
+          </div>
+        )}
 
         <Suspense
           fallback={

@@ -39,6 +39,26 @@ export interface TMDBMovie {
   tagline?: string;
   budget: number;
   revenue: number;
+  images?: {
+    backdrops: Array<{
+      file_path: string;
+      width: number;
+      height: number;
+    }>;
+    posters: Array<{
+      file_path: string;
+      width: number;
+      height: number;
+    }>;
+  };
+  videos?: {
+    results: Array<{
+      key: string;
+      site: string;
+      type: string;
+      name: string;
+    }>;
+  };
 }
 
 /**
@@ -114,6 +134,28 @@ export function adaptMovie(tmdbMovie: TMDBMovie): Movie {
   // 处理语言
   const languages = tmdbMovie.spoken_languages?.map((lang) => lang.name) || [];
 
+  // 处理剧照数据
+  const images = tmdbMovie.images
+    ? {
+        backdrops: tmdbMovie.images.backdrops
+          .slice(0, 10) // 只取前10张剧照
+          .map((img) => getImageUrl(img.file_path, "original")),
+        posters: tmdbMovie.images.posters
+          .slice(0, 10) // 只取前10张海报
+          .map((img) => getImageUrl(img.file_path, "w500")),
+      }
+    : undefined;
+
+  // 处理演员详情
+  const castDetails = tmdbMovie.credits?.cast
+    ?.slice(0, 10) // 只取前10位演员
+    .map((actor) => ({
+      id: actor.id,
+      name: actor.name,
+      character: actor.character,
+      profileUrl: getImageUrl(actor.profile_path, "w185"),
+    }));
+
   return {
     id: tmdbMovie.id,
     title: tmdbMovie.title,
@@ -139,6 +181,9 @@ export function adaptMovie(tmdbMovie: TMDBMovie): Movie {
     languages,
     writers,
     cinematographers,
+    // 新增剧照和演员数据
+    images,
+    castDetails,
   };
 }
 
