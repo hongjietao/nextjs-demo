@@ -1,16 +1,56 @@
 import { getAllMovies } from "./data/movies";
 import MovieCard from "./components/MovieCard";
+import { Suspense } from "react";
+
+// 创建一个加载中的MovieCard占位符
+function MovieCardSkeleton() {
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden h-full animate-pulse">
+      <div className="h-[400px] bg-gray-200 dark:bg-gray-700"></div>
+      <div className="p-4">
+        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-4"></div>
+        <div className="flex space-x-1 mb-3">
+          <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+          <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+        </div>
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+      </div>
+    </div>
+  );
+}
+
+// 异步电影列表组件
+async function MovieList() {
+  const movies = await getAllMovies();
+
+  if (movies.length === 0) {
+    return (
+      <div className="text-center py-10">
+        <p className="text-xl text-gray-600 dark:text-gray-400">
+          无法加载电影数据，请稍后再试
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {movies.map((movie) => (
+        <MovieCard key={movie.id} movie={movie} />
+      ))}
+    </>
+  );
+}
 
 export default function Home() {
-  const movies = getAllMovies();
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <header className="bg-white dark:bg-gray-800 shadow-md py-6">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-4 md:mb-0">
-              豆瓣电影 <span className="text-blue-500">Top 100</span>
+              热门电影 <span className="text-blue-500">Top 20</span>
             </h1>
             <div className="flex items-center space-x-4">
               <div className="relative">
@@ -45,9 +85,19 @@ export default function Home() {
             热门电影
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {movies.map((movie) => (
-              <MovieCard key={movie.id} movie={movie} />
-            ))}
+            <Suspense
+              fallback={
+                <>
+                  {Array(10)
+                    .fill(0)
+                    .map((_, index) => (
+                      <MovieCardSkeleton key={index} />
+                    ))}
+                </>
+              }
+            >
+              <MovieList />
+            </Suspense>
           </div>
         </div>
       </main>
