@@ -4,64 +4,27 @@
 // 使用本地API代理 - 确保使用绝对URL路径
 // 在客户端环境中，应该使用相对路径，在服务器端则需要完整URL
 function getApiUrl() {
-  // 检查是否在浏览器环境中
-  const isClient = typeof window !== "undefined";
-  // 如果在客户端，使用相对路径
-  if (isClient) {
-    return "/api/tmdb";
-  }
-  // 如果在服务器端，使用完整URL (使用环境变量获取主机名或默认使用localhost)
-  const host = process.env.VERCEL_URL || "localhost:3000";
-  const protocol = host.includes("localhost") ? "http" : "https";
-  return `${protocol}://${host}/api/tmdb`;
+  // 统一使用相对URL，避免在服务器端和客户端环境下的差异
+  return "/api/tmdb";
 }
 
 // TMDB图片服务地址
 const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p";
-
-// 请求超时时间（毫秒）
-const REQUEST_TIMEOUT = 8000;
-
-/**
- * 创建带超时的fetch请求
- */
-async function fetchWithTimeout(
-  url: string,
-  options: RequestInit = {},
-  timeout = REQUEST_TIMEOUT
-) {
-  try {
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), timeout);
-
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal,
-    });
-
-    clearTimeout(id);
-    return response;
-  } catch (error) {
-    console.error(`请求超时或失败: ${url}`, error);
-    throw error;
-  }
-}
 
 /**
  * 从TheMovieDB获取热门电影
  */
 export async function fetchPopularMovies(page = 1, language = "zh-CN") {
   try {
-    // 获取API完整URL
+    // 获取API URL
     const apiUrl = getApiUrl();
-    console.log(`获取热门电影，API URL: ${apiUrl}`);
 
-    // 使用API代理，设置超时
-    const response = await fetchWithTimeout(
+    // 使用API代理
+    const response = await fetch(
       `${apiUrl}?endpoint=movie/popular&page=${page}&language=${language}`,
       {
         cache: "no-store",
-        next: { revalidate: 60 },
+        // 移除revalidate，使用no-store确保每次都获取最新数据
       }
     );
 
@@ -76,11 +39,13 @@ export async function fetchPopularMovies(page = 1, language = "zh-CN") {
       throw new Error("API返回的数据格式不正确");
     }
 
+    // 如果成功获取数据，记录日志
+    console.log(`成功获取热门电影，共 ${data.results.length} 条记录`);
     return data.results;
   } catch (error) {
     console.error("获取热门电影失败:", error);
     console.log("API返回空数据，使用后备数据");
-    // 返回一些后备数据
+    // 返回空数组，会触发使用后备数据
     return [];
   }
 }
@@ -90,16 +55,15 @@ export async function fetchPopularMovies(page = 1, language = "zh-CN") {
  */
 export async function fetchMovieById(id: number, language = "zh-CN") {
   try {
-    // 获取API完整URL
+    // 获取API URL
     const apiUrl = getApiUrl();
-    console.log(`获取电影详情，ID: ${id}，API URL: ${apiUrl}`);
 
-    // 使用API代理，设置超时
-    const response = await fetchWithTimeout(
+    // 使用API代理
+    const response = await fetch(
       `${apiUrl}?endpoint=movie/${id}&append_to_response=credits,recommendations&language=${language}`,
       {
         cache: "no-store",
-        next: { revalidate: 3600 },
+        // 使用no-store确保获取最新数据
       }
     );
 
@@ -108,7 +72,9 @@ export async function fetchMovieById(id: number, language = "zh-CN") {
       throw new Error(`API响应错误: ${response.status}`);
     }
 
-    return await response.json();
+    const data = await response.json();
+    console.log(`成功获取电影详情，ID: ${id}`);
+    return data;
   } catch (error) {
     console.error(`获取电影ID ${id} 失败:`, error);
     return null;
@@ -141,18 +107,17 @@ export async function searchMovies(
   language = "zh-CN"
 ) {
   try {
-    // 获取API完整URL
+    // 获取API URL
     const apiUrl = getApiUrl();
-    console.log(`搜索电影，查询: ${query}，API URL: ${apiUrl}`);
 
     // 使用API代理
-    const response = await fetchWithTimeout(
+    const response = await fetch(
       `${apiUrl}?endpoint=search/movie&query=${encodeURIComponent(
         query
       )}&page=${page}&language=${language}`,
       {
         cache: "no-store",
-        next: { revalidate: 60 },
+        // 使用no-store确保获取最新数据
       }
     );
 
@@ -162,6 +127,9 @@ export async function searchMovies(
     }
 
     const data = await response.json();
+    console.log(
+      `成功搜索电影，关键词: ${query}，结果数: ${data.results.length}`
+    );
     return data.results;
   } catch (error) {
     console.error("搜索电影失败:", error);

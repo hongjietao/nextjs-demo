@@ -3,36 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 const TMDB_API_BASE_URL = "https://api.themoviedb.org/3";
 const TMDB_ACCESS_TOKEN = process.env.TMDB_ACCESS_TOKEN || "";
 
-// 超时配置（毫秒）
-const FETCH_TIMEOUT = 30000;
-
-// 带超时的fetch函数，尝试启用HTTP/2
-const fetchWithTimeout = async (
-  url: string,
-  options: RequestInit = {},
-  timeout = FETCH_TIMEOUT
-) => {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
-
-  try {
-    // 在Node.js环境中，fetch应该会自动协商HTTP/2，如果服务器支持的话
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal,
-    });
-    clearTimeout(id);
-    return response;
-  } catch (error) {
-    clearTimeout(id);
-    throw error;
-  }
-};
-
 export async function GET(request: NextRequest) {
   try {
     // 从URL获取endpoint和其他参数
-    // 使用request.nextUrl替代直接创建URL，避免解析错误
     const searchParams = request.nextUrl.searchParams;
     const endpoint = searchParams.get("endpoint");
 
@@ -44,7 +17,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 构建TMDB URL，保留所有原始参数但移除endpoint
+    // 构建TMDB URL
     const tmdbUrl = new URL(`${TMDB_API_BASE_URL}/${endpoint}`);
     searchParams.forEach((value, key) => {
       if (key !== "endpoint") {
@@ -52,9 +25,11 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // 调用TMDB API，使用带超时的fetch
+    // 调用TMDB API
     console.log(`正在请求TMDB API: ${tmdbUrl.toString()}`);
-    const response = await fetchWithTimeout(tmdbUrl.toString(), {
+
+    // 直接使用标准fetch
+    const response = await fetch(tmdbUrl.toString(), {
       headers: {
         Authorization: `Bearer ${TMDB_ACCESS_TOKEN}`,
         "Content-Type": "application/json",
@@ -75,16 +50,9 @@ export async function GET(request: NextRequest) {
     // 详细记录错误信息
     console.error("TMDB API代理错误:", error);
 
-    // 根据错误类型返回不同状态码
-    if (error instanceof Error && error.name === "AbortError") {
-      return NextResponse.json(
-        { error: "TMDB API请求超时", type: "timeout" },
-        { status: 504 }
-      );
-    }
-
+    // 为所有错误返回统一的状态码
     return NextResponse.json(
-      { error: "获取TMDB数据失败", type: "unknown" },
+      { error: "获取TMDB数据失败", details: String(error) },
       { status: 500 }
     );
   }

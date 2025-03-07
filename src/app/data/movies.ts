@@ -26,8 +26,8 @@ const CACHE_DURATION = 5 * 60 * 1000; // 缓存5分钟
 // 网络连接状态记录
 let hasNetworkError = false;
 
-// 强制使用后备数据的开关，可在生产环境中设为false
-const USE_FALLBACK_DATA = true;
+// 强制使用后备数据的开关，设为false以允许从TMDB获取实时数据
+const USE_FALLBACK_DATA = false;
 
 // 缓存是否过期
 function isCacheExpired(): boolean {
