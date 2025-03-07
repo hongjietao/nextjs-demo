@@ -1,0 +1,198 @@
+import Image from "next/image";
+import Link from "next/link";
+import { getMovieById } from "../../data/movies";
+import { StarIcon } from "@heroicons/react/24/solid";
+import {
+  ChevronLeftIcon,
+  ClockIcon,
+  UserIcon,
+} from "@heroicons/react/24/outline";
+
+interface MovieDetailPageProps {
+  params: {
+    id: string;
+  };
+}
+
+export default function MovieDetailPage({ params }: MovieDetailPageProps) {
+  const movieId = parseInt(params.id);
+  const movie = getMovieById(movieId);
+
+  if (!movie) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">电影未找到</h1>
+          <Link
+            href="/"
+            className="text-blue-500 hover:underline flex items-center justify-center"
+          >
+            <ChevronLeftIcon className="h-5 w-5 mr-1" />
+            返回首页
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Header with Back Button */}
+      <header className="bg-white dark:bg-gray-800 shadow-md py-4">
+        <div className="container mx-auto px-4">
+          <Link
+            href="/"
+            className="text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 flex items-center"
+          >
+            <ChevronLeftIcon className="h-5 w-5 mr-1" />
+            返回首页
+          </Link>
+        </div>
+      </header>
+
+      {/* Movie Detail Content */}
+      <main className="container mx-auto px-4 py-8">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+          {/* Hero Section with Poster and Basic Info */}
+          <div className="relative">
+            {/* Background Image (Blurred) */}
+            <div className="w-full h-[400px] relative overflow-hidden">
+              <Image
+                src={movie.posterUrl}
+                alt={movie.title}
+                fill
+                className="object-cover blur-sm scale-110 brightness-50"
+                priority
+              />
+            </div>
+
+            {/* Content Overlay */}
+            <div className="absolute inset-0 bg-black/30">
+              <div className="container mx-auto px-4 h-full flex flex-col md:flex-row items-center justify-center md:justify-start md:items-end py-8 gap-6">
+                {/* Poster */}
+                <div className="w-48 h-72 md:w-56 md:h-80 relative rounded-lg overflow-hidden shadow-2xl">
+                  <Image
+                    src={movie.posterUrl}
+                    alt={movie.title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 192px, 224px"
+                  />
+                </div>
+
+                {/* Basic Info */}
+                <div className="text-white max-w-lg">
+                  <h1 className="text-3xl md:text-4xl font-bold">
+                    {movie.title}
+                  </h1>
+                  <p className="text-lg mt-1 text-gray-300">
+                    {movie.originalTitle} ({movie.year})
+                  </p>
+
+                  <div className="flex items-center mt-4 space-x-6">
+                    <div className="flex items-center space-x-1">
+                      <StarIcon className="h-6 w-6 text-yellow-400" />
+                      <span className="text-xl font-bold">{movie.rating}</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <ClockIcon className="h-5 w-5 text-gray-300" />
+                      <span>{movie.duration}</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {movie.genres.map((genre) => (
+                      <span
+                        key={genre}
+                        className="px-3 py-1 rounded-full bg-blue-600/20 text-blue-100 text-sm"
+                      >
+                        {genre}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Detailed Info */}
+          <div className="p-6 md:p-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="md:col-span-2">
+                <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
+                  剧情简介
+                </h2>
+                <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                  {movie.summary}
+                </p>
+
+                <h2 className="text-xl font-bold text-gray-800 dark:text-white mt-8 mb-4">
+                  导演
+                </h2>
+                <div className="flex items-center space-x-2">
+                  <UserIcon className="h-5 w-5 text-gray-400" />
+                  <span className="text-gray-700 dark:text-gray-300">
+                    {movie.director}
+                  </span>
+                </div>
+
+                <h2 className="text-xl font-bold text-gray-800 dark:text-white mt-8 mb-4">
+                  主演
+                </h2>
+                <div className="flex flex-wrap gap-4">
+                  {movie.actors.map((actor) => (
+                    <div key={actor} className="flex items-center space-x-2">
+                      <span className="text-gray-700 dark:text-gray-300">
+                        {actor}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg">
+                  <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">
+                    电影信息
+                  </h3>
+
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        上映年份
+                      </p>
+                      <p className="text-gray-700 dark:text-gray-300">
+                        {movie.year}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        片长
+                      </p>
+                      <p className="text-gray-700 dark:text-gray-300">
+                        {movie.duration}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        豆瓣评分
+                      </p>
+                      <div className="flex items-center space-x-1">
+                        <StarIcon className="h-5 w-5 text-yellow-400" />
+                        <span className="text-gray-700 dark:text-gray-300 font-bold">
+                          {movie.rating}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
