@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Movie } from "../data/movies";
 import { StarIcon } from "@heroicons/react/24/solid";
@@ -14,12 +13,10 @@ export default function MovieCard({ movie }: MovieCardProps) {
         href={`/movie/${movie.id}`}
         className="relative h-[400px] overflow-hidden block"
       >
-        <Image
+        <img
           src={movie.posterUrl}
           alt={movie.title}
-          fill
-          className="object-cover transition-transform duration-300 hover:scale-105"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 hover:scale-105"
         />
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 text-white">
           <div className="flex items-center space-x-2">

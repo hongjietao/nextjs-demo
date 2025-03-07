@@ -26,6 +26,9 @@ const CACHE_DURATION = 5 * 60 * 1000; // 缓存5分钟
 // 网络连接状态记录
 let hasNetworkError = false;
 
+// 强制使用后备数据的开关，可在生产环境中设为false
+const USE_FALLBACK_DATA = true;
+
 // 缓存是否过期
 function isCacheExpired(): boolean {
   return Date.now() - cacheTimestamp > CACHE_DURATION;
@@ -42,6 +45,14 @@ export async function getAllMovies(): Promise<Movie[]> {
   // 如果缓存有效，直接返回缓存
   if (allMoviesCache && !isCacheExpired()) {
     return allMoviesCache;
+  }
+
+  // 如果强制使用后备数据，则直接返回
+  if (USE_FALLBACK_DATA) {
+    console.log("配置设置为使用后备数据");
+    allMoviesCache = FALLBACK_MOVIES;
+    cacheTimestamp = Date.now();
+    return FALLBACK_MOVIES;
   }
 
   try {

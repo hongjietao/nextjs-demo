@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { getMovieById, getAllMovies, Movie } from "../../data/movies";
 import { StarIcon } from "@heroicons/react/24/solid";
@@ -55,12 +54,10 @@ function RelatedMovieCard({ movie }: { movie: Movie }) {
   return (
     <Link href={`/movie/${movie.id}`} className="block group">
       <div className="relative h-[200px] overflow-hidden rounded-lg shadow-md group-hover:shadow-xl transition-all duration-300">
-        <Image
+        <img
           src={movie.posterUrl}
           alt={movie.title}
-          fill
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 25vw, 20vw"
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 text-white">
           <div className="flex items-center space-x-1">
@@ -131,13 +128,10 @@ async function MovieDetail({ movieId }: { movieId: number }) {
       <div className="h-[500px] bg-gray-900 relative">
         <div className="absolute inset-0 opacity-30">
           {/* 背景海报 */}
-          <Image
+          <img
             src={movie.posterUrl}
             alt={movie.title}
-            fill
-            className="object-cover object-center"
-            priority
-            sizes="100vw"
+            className="absolute inset-0 w-full h-full object-cover object-center"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent"></div>
         </div>
@@ -148,13 +142,10 @@ async function MovieDetail({ movieId }: { movieId: number }) {
           <div className="flex flex-col md:flex-row gap-8">
             <div className="w-full md:w-1/3 lg:w-1/4">
               <div className="rounded-xl overflow-hidden shadow-lg">
-                <Image
+                <img
                   src={movie.posterUrl}
                   alt={movie.title}
-                  width={400}
-                  height={600}
                   className="w-full h-auto"
-                  priority
                 />
               </div>
 

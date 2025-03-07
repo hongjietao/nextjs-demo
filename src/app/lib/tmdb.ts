@@ -124,14 +124,8 @@ export function getImageUrl(path: string | null, size = "w500") {
   if (!path) return "/placeholder-movie.jpg";
 
   try {
-    // 创建完整的TMDB图片URL
-    const tmdbUrl = `${TMDB_IMAGE_BASE_URL}/${size}${path}`;
-
-    // 使用本地图片代理API
-    const proxyUrl = `/api/image?url=${encodeURIComponent(tmdbUrl)}`;
-
-    // 使用代理URL解决图片加载问题
-    return proxyUrl;
+    // 直接使用TMDB图片URL
+    return `${TMDB_IMAGE_BASE_URL}/${size}${path}`;
   } catch (error) {
     console.error("图片URL生成失败:", error);
     return "/placeholder-movie.jpg";

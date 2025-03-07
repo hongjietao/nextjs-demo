@@ -3,10 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 const TMDB_API_BASE_URL = "https://api.themoviedb.org/3";
 const TMDB_ACCESS_TOKEN = process.env.TMDB_ACCESS_TOKEN || "";
 
-// 超时配置（毫秒）- 增加到30秒，以便有更多时间建立连接
-const FETCH_TIMEOUT = 3000;
+// 超时配置（毫秒）
+const FETCH_TIMEOUT = 30000;
 
-// 带超时的fetch函数
+// 带超时的fetch函数，尝试启用HTTP/2
 const fetchWithTimeout = async (
   url: string,
   options: RequestInit = {},
@@ -16,6 +16,7 @@ const fetchWithTimeout = async (
   const id = setTimeout(() => controller.abort(), timeout);
 
   try {
+    // 在Node.js环境中，fetch应该会自动协商HTTP/2，如果服务器支持的话
     const response = await fetch(url, {
       ...options,
       signal: controller.signal,
