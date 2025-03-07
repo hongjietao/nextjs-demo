@@ -4,8 +4,15 @@
 // 使用本地API代理 - 确保使用绝对URL路径
 // 在客户端环境中，应该使用相对路径，在服务器端则需要完整URL
 function getApiUrl() {
-  // 统一使用相对URL，避免在服务器端和客户端环境下的差异
-  return "/api/tmdb";
+  // 检查是否在浏览器环境中
+  const isClient = typeof window !== "undefined";
+  if (isClient) {
+    // 客户端环境，使用当前Origin构建完整URL
+    return `${window.location.origin}/api/tmdb`;
+  } else {
+    // 服务器端环境，使用相对路径
+    return "/api/tmdb";
+  }
 }
 
 // TMDB图片服务地址
@@ -17,16 +24,25 @@ const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p";
 export async function fetchPopularMovies(page = 1, language = "zh-CN") {
   try {
     // 获取API URL
-    const apiUrl = getApiUrl();
+    const baseApiUrl = getApiUrl();
 
-    // 使用API代理
-    const response = await fetch(
-      `${apiUrl}?endpoint=movie/popular&page=${page}&language=${language}`,
-      {
-        cache: "no-store",
-        // 移除revalidate，使用no-store确保每次都获取最新数据
-      }
+    // 构建完整的API URL，带查询参数
+    const url = new URL(
+      baseApiUrl,
+      typeof window !== "undefined"
+        ? window.location.origin
+        : "http://localhost:3000"
     );
+    url.searchParams.append("endpoint", "movie/popular");
+    url.searchParams.append("page", page.toString());
+    url.searchParams.append("language", language);
+
+    console.log(`请求热门电影URL: ${url.toString()}`);
+
+    // 使用完整URL发起请求
+    const response = await fetch(url.toString(), {
+      cache: "no-store",
+    });
 
     if (!response.ok) {
       console.error(`API响应错误: ${response.status}`);
@@ -56,16 +72,25 @@ export async function fetchPopularMovies(page = 1, language = "zh-CN") {
 export async function fetchMovieById(id: number, language = "zh-CN") {
   try {
     // 获取API URL
-    const apiUrl = getApiUrl();
+    const baseApiUrl = getApiUrl();
 
-    // 使用API代理
-    const response = await fetch(
-      `${apiUrl}?endpoint=movie/${id}&append_to_response=credits,recommendations&language=${language}`,
-      {
-        cache: "no-store",
-        // 使用no-store确保获取最新数据
-      }
+    // 构建完整的API URL，带查询参数
+    const url = new URL(
+      baseApiUrl,
+      typeof window !== "undefined"
+        ? window.location.origin
+        : "http://localhost:3000"
     );
+    url.searchParams.append("endpoint", `movie/${id}`);
+    url.searchParams.append("append_to_response", "credits,recommendations");
+    url.searchParams.append("language", language);
+
+    console.log(`请求电影详情URL: ${url.toString()}`);
+
+    // 使用完整URL发起请求
+    const response = await fetch(url.toString(), {
+      cache: "no-store",
+    });
 
     if (!response.ok) {
       console.error(`API响应错误 (电影ID ${id}): ${response.status}`);
@@ -108,18 +133,26 @@ export async function searchMovies(
 ) {
   try {
     // 获取API URL
-    const apiUrl = getApiUrl();
+    const baseApiUrl = getApiUrl();
 
-    // 使用API代理
-    const response = await fetch(
-      `${apiUrl}?endpoint=search/movie&query=${encodeURIComponent(
-        query
-      )}&page=${page}&language=${language}`,
-      {
-        cache: "no-store",
-        // 使用no-store确保获取最新数据
-      }
+    // 构建完整的API URL，带查询参数
+    const url = new URL(
+      baseApiUrl,
+      typeof window !== "undefined"
+        ? window.location.origin
+        : "http://localhost:3000"
     );
+    url.searchParams.append("endpoint", "search/movie");
+    url.searchParams.append("query", query);
+    url.searchParams.append("page", page.toString());
+    url.searchParams.append("language", language);
+
+    console.log(`搜索电影URL: ${url.toString()}`);
+
+    // 使用完整URL发起请求
+    const response = await fetch(url.toString(), {
+      cache: "no-store",
+    });
 
     if (!response.ok) {
       console.error(`搜索API响应错误: ${response.status}`);
