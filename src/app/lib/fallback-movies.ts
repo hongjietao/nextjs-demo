@@ -1,4 +1,39 @@
-import { Movie } from "../data/movies";
+// 定义Movie接口以避免循环依赖问题
+export interface Movie {
+  id: number;
+  title: string;
+  originalTitle: string;
+  year: number;
+  rating: number;
+  director: string;
+  actors: string[];
+  genres: string[];
+  summary: string;
+  posterUrl: string;
+  duration: string;
+  backdropUrl?: string;
+  voteCount?: number;
+  popularity?: number;
+  status?: string;
+  productionCompanies?: string[];
+  productionCountries?: string[];
+  tagline?: string;
+  budget?: string;
+  revenue?: string;
+  languages?: string[];
+  writers?: string[];
+  cinematographers?: string[];
+  images?: {
+    backdrops: string[];
+    posters: string[];
+  };
+  castDetails?: Array<{
+    id: number;
+    name: string;
+    character: string;
+    profileUrl: string;
+  }>;
+}
 
 // 后备电影数据，在API连接失败时使用
 export const FALLBACK_MOVIES: Movie[] = [

@@ -7,6 +7,7 @@ const TabsContext = createContext<{
   selectedTab: string;
   setSelectedTab: (value: string) => void;
   defaultValue?: string;
+  onValueChange?: (value: string) => void;
 }>({
   selectedTab: "",
   setSelectedTab: () => {},
@@ -17,15 +18,32 @@ export function Tabs({
   defaultValue,
   children,
   className = "",
+  onValueChange,
 }: {
   defaultValue: string;
   children: React.ReactNode;
   className?: string;
+  onValueChange?: (value: string) => void;
 }) {
   const [selectedTab, setSelectedTab] = useState(defaultValue);
 
+  // 创建一个包装的setSelectedTab函数，会同时调用onValueChange回调
+  const setSelectedTabWithCallback = (value: string) => {
+    setSelectedTab(value);
+    if (onValueChange) {
+      onValueChange(value);
+    }
+  };
+
   return (
-    <TabsContext.Provider value={{ selectedTab, setSelectedTab, defaultValue }}>
+    <TabsContext.Provider
+      value={{
+        selectedTab,
+        setSelectedTab: setSelectedTabWithCallback,
+        defaultValue,
+        onValueChange,
+      }}
+    >
       <div className={className}>{children}</div>
     </TabsContext.Provider>
   );

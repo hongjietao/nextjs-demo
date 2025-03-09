@@ -28,7 +28,7 @@ function MovieCardSkeleton() {
 function MovieListSkeleton() {
   return (
     <>
-      {Array(8)
+      {Array(10)
         .fill(0)
         .map((_, index) => (
           <MovieCardSkeleton key={index} />
@@ -50,14 +50,16 @@ export default function Home() {
   const [topRatedTotalPages, setTopRatedTotalPages] = useState(1);
   const [isLoadingTopRated, setIsLoadingTopRated] = useState(false);
 
-  // 初始加载热门电影
+  // 初始加载热门电影和最佳评分电影
   useEffect(() => {
     fetchPopularMovies(1);
+    fetchTopRatedMovies(1); // 预先加载最佳评分电影，而不是等到用户切换标签
   }, []);
 
   // 初始化最佳评分电影（当用户切换到该标签时）
   const initializeTopRatedMovies = () => {
-    if (topRatedMovies.length === 0) {
+    // 如果数据已过期或发生过错误，重新获取
+    if (isLoadingTopRated || topRatedMovies.length === 0) {
       fetchTopRatedMovies(1);
     }
   };
@@ -124,6 +126,11 @@ export default function Home() {
   const handleTabChange = (value: string) => {
     if (value === "top-rated") {
       initializeTopRatedMovies();
+    } else if (value === "popular") {
+      // 如果热门电影数据为空，加载热门电影数据
+      if (popularMovies.length === 0) {
+        fetchPopularMovies(1);
+      }
     }
   };
 
@@ -164,50 +171,26 @@ export default function Home() {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs
-          defaultValue="popular"
+          defaultValue="top-rated"
           className="mb-8"
           onValueChange={handleTabChange}
         >
           <div className="flex items-center justify-between mb-6">
             <TabsList className="bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
               <TabsTrigger
-                value="popular"
-                className="px-4 py-2 rounded-md data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-sm"
-              >
-                热门电影
-              </TabsTrigger>
-              <TabsTrigger
                 value="top-rated"
                 className="px-4 py-2 rounded-md data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-sm"
               >
                 最佳评分
               </TabsTrigger>
+              <TabsTrigger
+                value="popular"
+                className="px-4 py-2 rounded-md data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-sm"
+              >
+                热门电影
+              </TabsTrigger>
             </TabsList>
           </div>
-
-          <TabsContent value="popular">
-            <InfiniteScroll
-              onLoadMore={loadMorePopularMovies}
-              hasMore={popularPage < popularTotalPages}
-              isLoading={isLoadingPopular}
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                {popularMovies.length > 0 ? (
-                  popularMovies.map((movie) => (
-                    <MovieCard key={movie.id} movie={movie} />
-                  ))
-                ) : isLoadingPopular ? (
-                  <MovieListSkeleton />
-                ) : (
-                  <div className="col-span-full text-center py-10">
-                    <p className="text-xl text-gray-600 dark:text-gray-400">
-                      无法加载电影数据，请稍后再试
-                    </p>
-                  </div>
-                )}
-              </div>
-            </InfiniteScroll>
-          </TabsContent>
 
           <TabsContent value="top-rated">
             <InfiniteScroll
@@ -221,6 +204,30 @@ export default function Home() {
                     <MovieCard key={movie.id} movie={movie} />
                   ))
                 ) : isLoadingTopRated ? (
+                  <MovieListSkeleton />
+                ) : (
+                  <div className="col-span-full text-center py-10">
+                    <p className="text-xl text-gray-600 dark:text-gray-400">
+                      无法加载电影数据，请稍后再试
+                    </p>
+                  </div>
+                )}
+              </div>
+            </InfiniteScroll>
+          </TabsContent>
+
+          <TabsContent value="popular">
+            <InfiniteScroll
+              onLoadMore={loadMorePopularMovies}
+              hasMore={popularPage < popularTotalPages}
+              isLoading={isLoadingPopular}
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {popularMovies.length > 0 ? (
+                  popularMovies.map((movie) => (
+                    <MovieCard key={movie.id} movie={movie} />
+                  ))
+                ) : isLoadingPopular ? (
                   <MovieListSkeleton />
                 ) : (
                   <div className="col-span-full text-center py-10">

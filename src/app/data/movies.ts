@@ -61,7 +61,6 @@ const USE_FALLBACK_DATA = false;
 // 热门电影总页数和每页数量记录
 let popularMoviesTotalPages = 1;
 let topRatedMoviesTotalPages = 1;
-const ITEMS_PER_PAGE = 20; // 修改为每页20条数据
 
 // 缓存是否过期
 function isCacheExpired(): boolean {

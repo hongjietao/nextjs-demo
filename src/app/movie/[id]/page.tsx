@@ -11,12 +11,13 @@ import {
 import { Suspense } from "react";
 import ActorCard from "../../components/ActorCard";
 import ImageGallery from "../../components/ImageGallery";
-import { Tabs } from "../../components/ui/tabs";
 
+// 修改为符合 Next.js PageProps 约束的接口
 interface MovieDetailPageProps {
   params: {
     id: string;
   };
+  searchParams?: Record<string, string | string[] | undefined>;
 }
 
 // 电影详情页加载骨架
@@ -76,16 +77,16 @@ function RelatedMovieCard({ movie }: { movie: Movie }) {
 
 // 异步获取电影相关推荐
 async function RelatedMovies({ movieId }: { movieId: number }) {
-  const allMovies = await getAllMovies();
+  const allMoviesData = await getAllMovies();
   const movie = await getMovieById(movieId);
 
   if (!movie) return null;
 
-  const relatedMovies = allMovies
+  const relatedMovies = allMoviesData.movies
     .filter(
-      (m) =>
+      (m: Movie) =>
         m.id !== movie.id &&
-        m.genres.some((genre) => movie.genres.includes(genre))
+        m.genres.some((genre: string) => movie.genres.includes(genre))
     )
     .slice(0, 4);
 
@@ -97,7 +98,7 @@ async function RelatedMovies({ movieId }: { movieId: number }) {
         相关推荐
       </h2>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {relatedMovies.map((movie) => (
+        {relatedMovies.map((movie: Movie) => (
           <RelatedMovieCard key={movie.id} movie={movie} />
         ))}
       </div>
