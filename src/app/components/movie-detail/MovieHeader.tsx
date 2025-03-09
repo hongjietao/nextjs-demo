@@ -68,19 +68,21 @@ export default function MovieHeader({ movie }: MovieHeaderProps) {
               </span>
             </button>
           </div>
-
-          <Link
-            href="/"
-            className="mt-4 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400"
-          >
-            <ChevronLeftIcon className="h-5 w-5 mr-1" />
-            返回首页
-          </Link>
         </div>
       </div>
 
       {/* 详细信息 */}
       <div className="w-full md:w-2/3 lg:w-3/4">
+        <div className="flex items-center mb-4">
+          <Link
+            href="/"
+            className="flex items-center text-gray-600 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400"
+          >
+            <ChevronLeftIcon className="h-5 w-5 mr-1" />
+            返回首页
+          </Link>
+        </div>
+
         <h1 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white mb-2">
           {movie.title}
           <span className="text-lg ml-2 font-normal text-gray-500">

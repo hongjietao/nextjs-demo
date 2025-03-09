@@ -5,8 +5,11 @@ import { HttpsProxyAgent } from "https-proxy-agent";
 const TMDB_API_BASE_URL = "https://api.themoviedb.org/3";
 const TMDB_ACCESS_TOKEN = process.env.TMDB_ACCESS_TOKEN || "";
 
-// 创建代理代理
-const proxyAgent = new HttpsProxyAgent("http://localhost:7890");
+// 仅在开发环境下使用代理
+const proxyAgent =
+  process.env.NODE_ENV === "development"
+    ? new HttpsProxyAgent("http://localhost:7890")
+    : undefined;
 
 export async function GET(request: NextRequest) {
   try {
@@ -41,14 +44,14 @@ export async function GET(request: NextRequest) {
 
     console.log(`请求TMDB API: ${tmdbUrlString}`);
 
-    // 使用node-fetch和代理发送请求到TMDB API
+    // 使用node-fetch发送请求到TMDB API，仅在开发环境使用代理
     const response = await nodeFetch(tmdbUrlString, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${TMDB_ACCESS_TOKEN}`,
         "Content-Type": "application/json",
       },
-      agent: proxyAgent,
+      ...(proxyAgent ? { agent: proxyAgent } : {}),
     });
 
     // 检查响应状态

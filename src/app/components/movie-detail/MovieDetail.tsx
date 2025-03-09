@@ -5,6 +5,7 @@ import MovieHeader from "./MovieHeader";
 import MovieCast from "./MovieCast";
 import MovieGallery from "./MovieGallery";
 import RelatedMovies from "./RelatedMovies";
+import { Suspense } from "react";
 
 interface MovieDetailProps {
   movieId: number;
@@ -38,20 +39,32 @@ export default async function MovieDetail({ movieId }: MovieDetailProps) {
           <MovieHeader movie={movie} />
         </div>
 
-        {/* 演员阵容 */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 mb-10">
-          <MovieCast movie={movie} />
-        </div>
+        {/* 演员阵容 - 只有当有演员数据时才渲染该区块 */}
+        {movie.castDetails && movie.castDetails.length > 0 && (
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 mb-10">
+            <MovieCast movie={movie} />
+          </div>
+        )}
 
-        {/* 电影剧照 */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 mb-10">
-          <MovieGallery movie={movie} />
-        </div>
+        {/* 电影剧照 - 只有当有图片数据时才渲染该区块 */}
+        {movie.images &&
+          (movie.images.backdrops.length > 0 ||
+            movie.images.posters.length > 0) && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 mb-10">
+              <MovieGallery movie={movie} />
+            </div>
+          )}
 
-        {/* 相关电影 */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 mb-10">
+        {/* 相关电影 - 使用Suspense包裹，并且由RelatedMovies组件内部决定是否渲染 */}
+        <Suspense
+          fallback={
+            <div className="h-20 flex items-center justify-center">
+              <div className="h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          }
+        >
           <RelatedMovies movieId={movieId} />
-        </div>
+        </Suspense>
       </div>
     </>
   );

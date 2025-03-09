@@ -49,14 +49,16 @@ export default async function RelatedMovies({ movieId }: RelatedMoviesProps) {
   if (relatedMovies.length === 0) return null;
 
   return (
-    <div className="my-12">
-      <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">
-        相关推荐
-      </h2>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {relatedMovies.map((movie: Movie) => (
-          <RelatedMovieCard key={movie.id} movie={movie} />
-        ))}
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 mb-10">
+      <div className="my-4">
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">
+          相关推荐
+        </h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {relatedMovies.map((movie: Movie) => (
+            <RelatedMovieCard key={movie.id} movie={movie} />
+          ))}
+        </div>
       </div>
     </div>
   );
