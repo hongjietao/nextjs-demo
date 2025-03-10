@@ -70,7 +70,7 @@ function isCacheExpired(): boolean {
 // 根据索引范围获取电影列表
 export async function getMovies(start = 0, limit = 10): Promise<Movie[]> {
   const movies = await getAllMovies();
-  return movies.slice(start, start + limit);
+  return movies.movies.slice(start, start + limit);
 }
 
 // 获取所有电影 (TMDB热门电影)
